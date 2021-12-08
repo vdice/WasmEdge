@@ -188,7 +188,8 @@ private:
   Expect<AST::InstrView::iterator>
   enterFunction(Runtime::StoreManager &StoreMgr,
                 const Runtime::Instance::FunctionInstance &Func,
-                const AST::InstrView::iterator From);
+                const AST::InstrView::iterator From,
+                const bool IsTailCall = false);
 
   /// Helper function for branching to label.
   Expect<void> branchToLabel(Runtime::StoreManager &StoreMgr,
@@ -246,10 +247,12 @@ private:
   Expect<void> runReturnOp(AST::InstrView::iterator &PC);
   Expect<void> runCallOp(Runtime::StoreManager &StoreMgr,
                          const AST::Instruction &Instr,
-                         AST::InstrView::iterator &PC);
+                         AST::InstrView::iterator &PC,
+                         const bool IsTailCall = false);
   Expect<void> runCallIndirectOp(Runtime::StoreManager &StoreMgr,
                                  const AST::Instruction &Instr,
-                                 AST::InstrView::iterator &PC);
+                                 AST::InstrView::iterator &PC,
+                                 const bool IsTailCall = false);
   /// ======= Variable instructions =======
   Expect<void> runLocalGetOp(const uint32_t Idx);
   Expect<void> runLocalSetOp(const uint32_t Idx);
