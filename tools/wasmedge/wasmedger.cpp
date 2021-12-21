@@ -127,9 +127,9 @@ int main(int Argc, const char *Argv[]) {
   if (PropSIMD.value()) {
     Conf.removeProposal(WasmEdge::Proposal::SIMD);
   }
-  /// Left for the future proposals.
-  /// if (PropAll.value()) {
-  /// }
+  // Left for the future proposals.
+  // if (PropAll.value()) {
+  // }
   if (MemLim.value().size() > 0) {
     Conf.getRuntimeConfigure().setMaxMemoryPage(
         static_cast<uint32_t>(MemLim.value().back()));
@@ -254,7 +254,7 @@ int main(int Argc, const char *Argv[]) {
         FuncArgTypes.emplace_back(WasmEdge::ValType::F64);
         break;
       }
-      /// TODO: FuncRef and ExternRef
+      // TODO: FuncRef and ExternRef
       default:
         break;
       }
@@ -270,7 +270,7 @@ int main(int Argc, const char *Argv[]) {
     }
 
     if (auto Result = VM.execute(FuncName, FuncArgs, FuncArgTypes)) {
-      /// Print results.
+      // Print results.
       for (size_t I = 0; I < Result->size(); ++I) {
         switch ((*Result)[I].second) {
         case WasmEdge::ValType::I32:
@@ -285,7 +285,7 @@ int main(int Argc, const char *Argv[]) {
         case WasmEdge::ValType::F64:
           std::cout << (*Result)[I].first.get<double>() << '\n';
           break;
-        /// TODO: FuncRef and ExternRef
+        // TODO: FuncRef and ExternRef
         default:
           break;
         }

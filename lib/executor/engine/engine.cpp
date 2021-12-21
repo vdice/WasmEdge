@@ -15,21 +15,21 @@ Expect<void>
 Executor::runFunction(Runtime::StoreManager &StoreMgr,
                       const Runtime::Instance::FunctionInstance &Func,
                       Span<const ValVariant> Params) {
-  /// Set start time.
+  // Set start time.
   if (Stat && Conf.getStatisticsConfigure().isTimeMeasuring()) {
     Stat->startRecordWasm();
   }
 
-  /// Reset and push a dummy frame into stack.
+  // Reset and push a dummy frame into stack.
   StackMgr.reset();
   StackMgr.pushDummyFrame();
 
-  /// Push arguments.
+  // Push arguments.
   for (auto &Val : Params) {
     StackMgr.push(Val);
   }
 
-  /// Enter and execute function.
+  // Enter and execute function.
   AST::InstrView::iterator StartIt;
   if (auto Res = enterFunction(StoreMgr, Func, Func.getInstrs().end())) {
     StartIt = *Res;
@@ -44,7 +44,7 @@ Executor::runFunction(Runtime::StoreManager &StoreMgr,
     spdlog::debug(" Terminated.");
   }
 
-  /// Print time cost.
+  // Print time cost.
   if (Stat) {
     if (Conf.getStatisticsConfigure().isTimeMeasuring()) {
       Stat->stopRecordWasm();
@@ -100,7 +100,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
   auto Dispatch = [this, &PC, &StoreMgr]() -> Expect<void> {
     const AST::Instruction &Instr = *PC;
     switch (Instr.getOpCode()) {
-    /// Control instructions.
+    // Control instructions.
     case OpCode::Unreachable:
       spdlog::error(ErrCode::Unreachable);
       spdlog::error(
@@ -116,7 +116,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return runIfElseOp(StoreMgr, Instr, PC);
     case OpCode::Else:
       if (Stat && Conf.getStatisticsConfigure().isCostMeasuring()) {
-        /// Reach here means end of if-statement.
+        // Reach here means end of if-statement.
         if (unlikely(!Stat->subInstrCost(Instr.getOpCode()))) {
           return Unexpect(ErrCode::CostLimitExceeded);
         }
@@ -141,7 +141,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
     case OpCode::Call_indirect:
       return runCallIndirectOp(StoreMgr, Instr, PC);
 
-    /// Reference Instructions
+    // Reference Instructions
     case OpCode::Ref__null:
       StackMgr.push(UnknownRef());
       return {};
@@ -161,18 +161,18 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return {};
     }
 
-    /// Parametric Instructions
+    // Parametric Instructions
     case OpCode::Drop:
       StackMgr.pop();
       return {};
     case OpCode::Select:
     case OpCode::Select_t: {
-      /// Pop the i32 value and select values from stack.
+      // Pop the i32 value and select values from stack.
       ValVariant CondVal = StackMgr.pop();
       ValVariant Val2 = StackMgr.pop();
       ValVariant Val1 = StackMgr.pop();
 
-      /// Select the value.
+      // Select the value.
       if (CondVal.get<uint32_t>() == 0) {
         StackMgr.push(Val2);
       } else {
@@ -181,7 +181,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return {};
     }
 
-    /// Variable Instructions
+    // Variable Instructions
     case OpCode::Local__get:
       return runLocalGetOp(Instr.getTargetIndex());
     case OpCode::Local__set:
@@ -193,7 +193,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
     case OpCode::Global__set:
       return runGlobalSetOp(StoreMgr, Instr.getTargetIndex());
 
-    /// Table Instructions
+    // Table Instructions
     case OpCode::Table__get:
       return runTableGetOp(*getTabInstByIdx(StoreMgr, Instr.getTargetIndex()),
                            Instr);
@@ -218,7 +218,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return runTableFillOp(*getTabInstByIdx(StoreMgr, Instr.getTargetIndex()),
                             Instr);
 
-    /// Memory Instructions
+    // Memory Instructions
     case OpCode::I32__load:
       return runLoadOp<uint32_t>(*getMemInstByIdx(StoreMgr, 0), Instr);
     case OpCode::I64__load:
@@ -280,7 +280,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
     case OpCode::Memory__fill:
       return runMemoryFillOp(*getMemInstByIdx(StoreMgr, 0), Instr);
 
-    /// Const numeric instructions
+    // Const numeric instructions
     case OpCode::I32__const:
     case OpCode::I64__const:
     case OpCode::F32__const:
@@ -288,7 +288,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       StackMgr.push(Instr.getNum());
       return {};
 
-    /// Unary numeric instructions
+    // Unary numeric instructions
     case OpCode::I32__eqz:
       return runEqzOp<uint32_t>(StackMgr.getTop());
     case OpCode::I64__eqz:
@@ -410,7 +410,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
     case OpCode::I64__trunc_sat_f64_u:
       return runTruncateSatOp<double, uint64_t>(StackMgr.getTop());
 
-      /// Binary numeric instructions
+      // Binary numeric instructions
     case OpCode::I32__eq: {
       ValVariant Rhs = StackMgr.pop();
       return runEqOp<uint32_t>(StackMgr.getTop(), Rhs);
@@ -716,7 +716,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return runCopysignOp<double>(StackMgr.getTop(), Rhs);
     }
 
-    /// SIMD Memory Instructions
+    // SIMD Memory Instructions
     case OpCode::V128__load:
       return runLoadOp<uint128_t>(*getMemInstByIdx(StoreMgr, 0), Instr);
     case OpCode::V128__load8x8_s:
@@ -768,12 +768,12 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
     case OpCode::V128__store64_lane:
       return runStoreLaneOp<uint64_t>(*getMemInstByIdx(StoreMgr, 0), Instr);
 
-    /// SIMD Const Instructions
+    // SIMD Const Instructions
     case OpCode::V128__const:
       StackMgr.push(Instr.getNum());
       return {};
 
-    /// SIMD Shuffle Instructions
+    // SIMD Shuffle Instructions
     case OpCode::I8x16__shuffle: {
       ValVariant Val2 = StackMgr.pop();
       ValVariant &Val1 = StackMgr.getTop();
@@ -790,7 +790,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       return {};
     }
 
-    /// SIMD Lane Instructions
+    // SIMD Lane Instructions
     case OpCode::I8x16__extract_lane_s:
       return runExtractLaneOp<int8_t, int32_t>(StackMgr.getTop(),
                                                Instr.getTargetIndex());
@@ -845,7 +845,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
                                       Instr.getTargetIndex());
     }
 
-      /// SIMD Numeric Instructions
+      // SIMD Numeric Instructions
     case OpCode::I8x16__swizzle: {
       const ValVariant Val2 = StackMgr.pop();
       ValVariant &Val1 = StackMgr.getTop();
@@ -1573,7 +1573,7 @@ Expect<void> Executor::execute(Runtime::StoreManager &StoreMgr,
       if (Conf.getStatisticsConfigure().isInstructionCounting()) {
         Stat->incInstrCount();
       }
-      /// Add cost. Note: if-else case should be processed additionally.
+      // Add cost. Note: if-else case should be processed additionally.
       if (Conf.getStatisticsConfigure().isCostMeasuring()) {
         if (unlikely(!Stat->addInstrCost(Code))) {
           return Unexpect(ErrCode::CostLimitExceeded);
